@@ -23,6 +23,7 @@ public class BattleService {
             state = bf.getField().get(coordinate);
             bf.getField().put(coordinate, State.Damaged);
         }
+        bf.getRemainingCells().remove(coordinate);
         return state;
     }
     private static List<Coordinate> getUnitsByType(BattleField bf, State unitState) {
@@ -43,15 +44,27 @@ public class BattleService {
         if (move != null)
             switch (move) {
                 case Battleship:
-                    attacker.getRemainingCells().remove(shot);
-                    if (shot.getX() < attacker.getSizeX() - 1)
-                        attacker.getPreferredShots().offer(new Coordinate(shot.getX() + 1, shot.getY()));
-                    if(shot.getX() > 0)
-                        attacker.getPreferredShots().offer(new Coordinate(shot.getX() - 1, shot.getY()));
-                    if(shot.getY() < attacker.getSizeY() - 1)
-                        attacker.getPreferredShots().offer(new Coordinate(shot.getX(), shot.getY() + 1));
-                    if(shot.getY() > 0)
-                        attacker.getPreferredShots().add(new Coordinate(shot.getX(), shot.getY() - 1));
+                    List<Coordinate> newCoordinates = new ArrayList<>();
+                    newCoordinates.add(new Coordinate(shot.getX() + 1, shot.getY()));
+                    newCoordinates.add(new Coordinate(shot.getX() - 1, shot.getY()));
+                    newCoordinates.add(new Coordinate(shot.getX(), shot.getY() + 1));
+                    newCoordinates.add(new Coordinate(shot.getX(), shot.getY() - 1));
+
+                    for(Coordinate i : newCoordinates)
+                        if(attacked.getRemainingCells().contains(i))
+                            attacker.getPreferredShots().add(i);
+//
+//                    attacker.getRemainingCells().remove(shot);
+//                    if (shot.getX() < attacker.getSizeX() - 1 && )
+//                        attacker.getPreferredShots().offer(new Coordinate(shot.getX() + 1, shot.getY()));
+//                    if(shot.getX() > 0)
+//                        attacker.getPreferredShots().offer(new Coordinate(shot.getX() - 1, shot.getY()));
+//                    if(shot.getY() < attacker.getSizeY() - 1)
+//                        attacker.getPreferredShots().offer(new Coordinate(shot.getX(), shot.getY() + 1));
+//                    if(shot.getY() > 0)
+//                        attacker.getPreferredShots().add(new Coordinate(shot.getX(), shot.getY() - 1));
+
+
 //                    int[] newShotX = {
 //                            shot.getX() == attacker.getSizeX() ? 0 : 1,
 //                            0,

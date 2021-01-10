@@ -1,5 +1,5 @@
 package oop.kurs2.redundant;
-
+// вынести redundant в гит и возвращаться к нему через контроль версий
 public class BattleShip {
     private int x, y, size;
     private int damageTaken;

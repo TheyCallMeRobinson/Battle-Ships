@@ -27,6 +27,7 @@ public class DrawService {
     public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
     public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
     public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
+
     public static void printField(BattleField bf) {
         Map<Coordinate, State> map = bf.getField();
         State[][] field = new State[bf.getSizeX()][bf.getSizeY()];
@@ -72,16 +73,20 @@ public class DrawService {
     public static void drawField(Graphics g, BattleField first, BattleField second, int sizeX, int sizeY) {
         Map<Coordinate, State> firstMap = first.getField();
         Map<Coordinate, State> secondMap = second.getField();
-        int stepX = sizeX / first.getSizeX() / 3;
-        int stepY = sizeY / first.getSizeY() / 3;
+        int stepX = sizeX / first.getSizeX() / 2;
+        int stepY = sizeY / first.getSizeY() / 2;
         int gapForSecondField = stepX * first.getSizeX() + 100;
         for(Coordinate i : firstMap.keySet()) {
             g.setColor(getColorByState(firstMap.get(i)));
             g.fillRect(i.getX() * stepX, i.getY() * stepY, stepX, stepY);
+            g.setColor(Color.black);
+            g.drawRect(i.getX() * stepX, i.getY() * stepY, stepX, stepY);
         }
         for(Coordinate i : secondMap.keySet()) {
             g.setColor(getColorByState(secondMap.get(i)));
             g.fillRect(i.getX() * stepX + gapForSecondField, i.getY() * stepY, stepX, stepY);
+            g.setColor(Color.black);
+            g.drawRect(i.getX() * stepX + gapForSecondField, i.getY() * stepY, stepX, stepY);
         }
     }
     private static Color getColorByState(State s) {
@@ -98,8 +103,6 @@ public class DrawService {
                 return Color.CYAN;
             case Damaged:
                 return Color.RED;
-            case Miss:
-                return Color.WHITE;
         }
         return Color.WHITE;
     }

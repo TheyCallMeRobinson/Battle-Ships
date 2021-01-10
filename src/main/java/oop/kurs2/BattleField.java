@@ -29,26 +29,56 @@ public class BattleField {
     private Queue<Coordinate> preferredShots = new LinkedList<>();  // относится к союзному полю
     private List<Coordinate> remainingCells = new ArrayList<>();    // относится к союзному полю и используется против вражеского поля,
                                                                     // то есть какие выстрелы этот игрок может сделать по вражескому полю
+
     private Set<Coordinate> steps = new TreeSet<>();
+    
     public BattleField(int sizeX, int sizeY, String playerName) {
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.playerName = playerName;
     }
 
-    public Map<Coordinate, State> getField() {
-        return field;
-    }
-    public List<Coordinate> getRemainingCells() {
-        return remainingCells;
-    }
-    public Queue<Coordinate> getPreferredShots() {
-        return preferredShots;
-    }
     public int getSizeX() {
         return sizeX;
     }
     public int getSizeY() {
         return sizeY;
+    }
+    public String getPlayerName() {
+        return playerName;
+    }
+    public Map<Coordinate, State> getField() {
+        return field;
+    }
+    public Queue<Coordinate> getPreferredShots() {
+        return preferredShots;
+    }
+    public List<Coordinate> getRemainingCells() {
+        return remainingCells;
+    }
+    public Set<Coordinate> getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Set<Coordinate> steps) {
+        this.steps = steps;
+    }
+    public void setSizeX(int sizeX) {
+        this.sizeX = sizeX;
+    }
+    public void setSizeY(int sizeY) {
+        this.sizeY = sizeY;
+    }
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
+    }
+    public void setField(Map<Coordinate, State> field) {
+        this.field = field;
+    }
+    public void setPreferredShots(Queue<Coordinate> preferredShots) {
+        this.preferredShots = preferredShots;
+    }
+    public void setRemainingCells(List<Coordinate> remainingCells) {
+        this.remainingCells = remainingCells;
     }
 }
