@@ -25,18 +25,16 @@ import java.util.*;
 public class BattleField {
     private int sizeX, sizeY;
     private String playerName = "";
-    private Map<Coordinate, State> field = new HashMap<>();         // относится к союзному полю
-    private Queue<Coordinate> preferredShots = new LinkedList<>();  // относится к союзному полю
-    private List<Coordinate> remainingCells = new ArrayList<>();    // относится к союзному полю и используется против вражеского поля,
-                                                                    // то есть какие выстрелы этот игрок может сделать по вражескому полю
+    private Map<Coordinate, State> field = new HashMap<>();
+    private Queue<Coordinate> preferredShots = new LinkedList<>();
+    private List<Coordinate> remainingCells = new ArrayList<>();
 
-    private Set<Coordinate> steps = new TreeSet<>();
-    
     public BattleField(int sizeX, int sizeY, String playerName) {
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.playerName = playerName;
     }
+    public BattleField() {}
 
     public int getSizeX() {
         return sizeX;
@@ -56,13 +54,7 @@ public class BattleField {
     public List<Coordinate> getRemainingCells() {
         return remainingCells;
     }
-    public Set<Coordinate> getSteps() {
-        return steps;
-    }
 
-    public void setSteps(Set<Coordinate> steps) {
-        this.steps = steps;
-    }
     public void setSizeX(int sizeX) {
         this.sizeX = sizeX;
     }

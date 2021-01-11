@@ -1,7 +1,6 @@
 package oop.kurs2.services;
 
 import oop.kurs2.BattleField;
-import oop.kurs2.gui.DrawPanel;
 import oop.kurs2.units.Coordinate;
 import oop.kurs2.units.State;
 

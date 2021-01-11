@@ -1,19 +1,27 @@
 package oop.kurs2.gui;
 
+import com.google.gson.Gson;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import oop.kurs2.Game;
 import oop.kurs2.services.BattleService;
+import oop.kurs2.services.GameService;
 import oop.kurs2.services.GenerateService;
+import oop.kurs2.services.SerializeService;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class MainFrame extends JFrame {
     private JPanel rootPanel;
-    private DrawPanel drawPanel;
+    private ShipsDrawPanel shipsDrawPanel;
     private JButton nextStepButton;
     private JPanel graphicsPanel;
     private JSpinner fieldSizeSpinner;
@@ -22,7 +30,8 @@ public class MainFrame extends JFrame {
     private JTextField secondPlayerName;
     private JPanel settingsContainer;
     private JTextField textField;
-    private boolean queue = true;
+    private JButton serialize;
+    private JButton deserialize;
 
     public MainFrame() {
         $$$setupUI$$$();
@@ -32,26 +41,63 @@ public class MainFrame extends JFrame {
         createFields.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                drawPanel.setFirstField(GenerateService.generateBattlefield((int) fieldSizeSpinner.getValue(), (int) fieldSizeSpinner.getValue(), firstPlayerName.getText()));
-                drawPanel.setSecondField(GenerateService.generateBattlefield((int) fieldSizeSpinner.getValue(), (int) fieldSizeSpinner.getValue(), secondPlayerName.getText()));
-                drawPanel.repaint();
+                Game game = new Game(
+                        GenerateService.generateBattlefield((int) fieldSizeSpinner.getValue(), (int) fieldSizeSpinner.getValue(), firstPlayerName.getText()),
+                        GenerateService.generateBattlefield((int) fieldSizeSpinner.getValue(), (int) fieldSizeSpinner.getValue(), secondPlayerName.getText())
+                );
+                shipsDrawPanel.setGame(game);
+                shipsDrawPanel.setFirstPlayerName(game.getAttacker().getPlayerName());
+                shipsDrawPanel.setSecondPlayerName(game.getAttacked().getPlayerName());
+                shipsDrawPanel.repaint();
             }
         });
         nextStepButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (BattleService.hasNextMove(drawPanel.getFirstField(), drawPanel.getSecondField()))
-                    drawPanel.nextStep(queue);
+                if (BattleService.hasNextMove(shipsDrawPanel.getGame().getAttacker(), shipsDrawPanel.getGame().getAttacked()))
+                    shipsDrawPanel.setGame(GameService.nextStep(shipsDrawPanel.getGame()));
                 else
-                    textField.setText(BattleService.checkDefeat(drawPanel.getFirstField()) ? drawPanel.getSecondField().getPlayerName() : drawPanel.getFirstField().getPlayerName() + " wins!");
-                drawPanel.repaint();
-                queue = !queue;
+                    textField.setText(BattleService.checkDefeat(shipsDrawPanel.getGame().getAttacked()) ? shipsDrawPanel.getGame().getAttacker().getPlayerName() : shipsDrawPanel.getGame().getAttacked().getPlayerName() + " wins!");
+                shipsDrawPanel.repaint();
+                System.out.println(shipsDrawPanel.getGame().getAttacked().getRemainingCells().size());
+            }
+        });
+        serialize.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SerializeService<Game> serialize = new SerializeService<>();
+                String serialization = serialize.serialize(shipsDrawPanel.getGame());
+                try (FileWriter fw = new FileWriter("./src/main/java/save/save.txt")) {
+                    fw.write(serialization);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        deserialize.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try (FileReader fr = new FileReader("./src/main/java/save/save.txt")) {
+                    Scanner scn = new Scanner(fr);
+                    StringBuilder sb = new StringBuilder();
+                    while (scn.hasNextLine())
+                        sb.append(scn.nextLine());
+                    Game game = new Gson().fromJson(String.valueOf(sb), Game.class);
+                    shipsDrawPanel.setGame(game);
+                    shipsDrawPanel.setFirstPlayerName(game.getAttacker().getPlayerName());
+                    shipsDrawPanel.setSecondPlayerName(game.getAttacked().getPlayerName());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                shipsDrawPanel.repaint();
             }
         });
     }
 
     private void createUIComponents() {
-        drawPanel = new DrawPanel(800, 800);
+        shipsDrawPanel = new ShipsDrawPanel(800, 800);
+        shipsDrawPanel.setFirstPlayerName(shipsDrawPanel.getGame().getAttacker().getPlayerName());
+        shipsDrawPanel.setSecondPlayerName(shipsDrawPanel.getGame().getAttacked().getPlayerName());
         SpinnerNumberModel snm = new SpinnerNumberModel(10, 1, 50, 1);
         fieldSizeSpinner = new JSpinner(snm);
     }
@@ -66,15 +112,15 @@ public class MainFrame extends JFrame {
     private void $$$setupUI$$$() {
         createUIComponents();
         rootPanel = new JPanel();
-        rootPanel.setLayout(new GridLayoutManager(4, 2, new Insets(0, 0, 0, 0), -1, -1));
+        rootPanel.setLayout(new GridLayoutManager(3, 2, new Insets(0, 0, 0, 0), -1, -1));
         graphicsPanel = new JPanel();
         graphicsPanel.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        rootPanel.add(graphicsPanel, new GridConstraints(0, 0, 2, 1, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(900, 400), new Dimension(900, 400), new Dimension(900, 400), 0, false));
-        graphicsPanel.add(drawPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(900, 400), null, new Dimension(900, 400), 0, false));
+        rootPanel.add(graphicsPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(900, 400), new Dimension(771, 400), new Dimension(900, 400), 0, false));
+        graphicsPanel.add(shipsDrawPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(900, 400), new Dimension(764, 10), new Dimension(900, 400), 0, false));
         final Spacer spacer1 = new Spacer();
-        rootPanel.add(spacer1, new GridConstraints(1, 1, 3, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        rootPanel.add(spacer1, new GridConstraints(1, 1, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         settingsContainer = new JPanel();
-        settingsContainer.setLayout(new GridLayoutManager(5, 3, new Insets(0, 0, 0, 0), -1, -1));
+        settingsContainer.setLayout(new GridLayoutManager(7, 3, new Insets(0, 0, 0, 0), -1, -1));
         rootPanel.add(settingsContainer, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         settingsContainer.add(fieldSizeSpinner, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
@@ -90,20 +136,20 @@ public class MainFrame extends JFrame {
         createFields.setText("Create");
         settingsContainer.add(createFields, new GridConstraints(3, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(78, 23), null, 0, false));
         final Spacer spacer2 = new Spacer();
-        settingsContainer.add(spacer2, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final Spacer spacer3 = new Spacer();
-        settingsContainer.add(spacer3, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final Spacer spacer4 = new Spacer();
-        settingsContainer.add(spacer4, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final Spacer spacer5 = new Spacer();
-        settingsContainer.add(spacer5, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, new Dimension(14, 23), null, 0, false));
+        settingsContainer.add(spacer2, new GridConstraints(0, 0, 7, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         textField = new JTextField();
         settingsContainer.add(textField, new GridConstraints(4, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final Spacer spacer6 = new Spacer();
-        rootPanel.add(spacer6, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        serialize = new JButton();
+        serialize.setText("Serialize");
+        settingsContainer.add(serialize, new GridConstraints(5, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        deserialize = new JButton();
+        deserialize.setText("Deserialize");
+        settingsContainer.add(deserialize, new GridConstraints(6, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer3 = new Spacer();
+        rootPanel.add(spacer3, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(771, 14), null, 0, false));
         nextStepButton = new JButton();
         nextStepButton.setText("Next Step");
-        rootPanel.add(nextStepButton, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, 1, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(538, 30), null, 0, false));
+        rootPanel.add(nextStepButton, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, 1, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(771, 30), null, 0, false));
     }
 
     /**

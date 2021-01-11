@@ -21,6 +21,8 @@ public class Coordinate {
         this.y = y;
     }
 
+    public Coordinate() {
+    }
     public Coordinate(Character x, int y) {
         this.x = x;
         this.y = y;
@@ -31,5 +33,12 @@ public class Coordinate {
     }
     public int getY() {
         return y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+    public void setY(int y) {
+        this.y = y;
     }
 }
